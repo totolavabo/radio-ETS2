@@ -165,23 +165,14 @@
             font-size: 0.75rem;
             color: var(--muted);
             margin-top: 2px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
         .badge {
             background: #2d2d2d;
             padding: 1px 5px;
             border-radius: 3px;
+            margin-right: 4px;
             border: 1px solid #3d3d3d;
         }
-        .status-dot {
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-        .status-dot.checking { color: #aaa; }
-        .status-dot.ok { color: #44ff44; }
-        .status-dot.error { color: #ff4444; }
 
         .station-actions {
             display: flex;
@@ -293,13 +284,12 @@
 <body>
 
     <h1>Générateur <code>live_streams.sii</code> (ETS 2)</h1>
-    <p class="subtitle">Les flux sont testés automatiquement en arrière-plan au chargement de la page.</p>
+    <p class="subtitle">Coche tes radios à gauche, organise leur ordre à droite (glisser-déposer ou flèches) et télécharge ton fichier.</p>
 
     <div class="toolbar">
         <input type="text" id="searchInput" placeholder="Rechercher une radio, un genre, un pays..." oninput="renderAvailable()">
         <button class="btn" onclick="selectAll()">Tout sélectionner</button>
         <button class="btn" onclick="clearSelection()">Tout vider</button>
-        <button class="btn" onclick="runAutoTest()">🔄 Relancer les tests</button>
         <label class="btn" style="cursor:pointer;">
             Importer un .sii
             <input type="file" id="importFile" accept=".sii,.txt" style="display:none" onchange="importSiiFile(event)">
@@ -339,63 +329,51 @@
 
 <script>
     const catalog = [
-        { url: "https://stream.laut.fm/hardbassgut", name: "Radio Hardbass", genre: "Hardbass", country: "RU", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://mp3channels.webradio.antenne.de/antenne", name: "Antenne Bayern", genre: "Pop", country: "DE", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://mp3channels.webradio.antenne.de/2000er-hits", name: "Antenne Bayern 2000er Hits", genre: "2000s", country: "DE", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://mp3channels.webradio.antenne.de/2010er-hits", name: "Antenne Bayern 2010er Hits", genre: "2010s", country: "DE", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://mp3channels.webradio.antenne.de/70er-hits", name: "Antenne Bayern 70er Hits", genre: "Oldies", country: "DE", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://mp3channels.webradio.antenne.de/80er-kulthits", name: "Antenne Bayern 80er Hits", genre: "80s", country: "DE", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://mp3channels.webradio.antenne.de/90er-hits", name: "Antenne Bayern 90er Hits", genre: "90s", country: "DE", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://energy.ice.infomaniak.ch/energybasel-high.mp3", name: "NRJ (Energy) Basel", genre: "Pop", country: "CH", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://energy.ice.infomaniak.ch/energybern-high.mp3", name: "NRJ (Energy) Bern", genre: "Pop", country: "CH", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://energy.ice.infomaniak.ch/energyluzern-high.mp3", name: "NRJ (Energy) Luzern", genre: "Pop", country: "CH", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://energy.ice.infomaniak.ch/energystgallen-high.mp3", name: "NRJ (Energy) St.Gallen", genre: "Pop", country: "CH", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://energy.ice.infomaniak.ch/energyzuerich-high.mp3", name: "NRJ (Energy) Zurich", genre: "Pop", country: "CH", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.rtl.fr/rtl-1-44-128.mp3", name: "RTL", genre: "Talk", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://icecast.radiofrance.fr/franceinter-midfi.mp3", name: "France Inter", genre: "Talk", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://icecast.radiofrance.fr/franceinfo-midfi.mp3", name: "France Info", genre: "News", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://icecast.radiofrance.fr/francebleu-midfi.mp3", name: "France Bleu", genre: "Local", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.europe1.fr/live/europe1-midfi.mp3", name: "Europe 1", genre: "Talk", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.sudradio.fr/sudradio.mp3", name: "Sud Radio", genre: "Talk", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.rmc.fr/rmc-high", name: "RMC", genre: "Talk", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.NRJ.fr/mp3/nrj_high.mp3", name: "NRJ", genre: "Pop", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://stream.funradio.fr/fun-1-44-128.mp3", name: "Fun Radio", genre: "Dance", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://stream.virginradio.fr/virgin.mp3", name: "Europe 2", genre: "Pop-Rock", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://rfm-live-mp3.scdn.arkena.com/rfm.mp3", name: "RFM", genre: "Pop", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.cheriefm.fr/mp3/cheriefm_high.mp3", name: "Chérie FM", genre: "Pop", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://vinyldance.ice.infomaniak.ch/vinyldance-128.mp3", name: "Mona FM", genre: "Pop", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.rtl2.fr/rtl2-1-44-128.mp3", name: "RTL2", genre: "Rock", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://streaming.radio.rtl.fr/rtl2", name: "RTL2 Alternative", genre: "Rock", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://ouifm.ice.infomaniak.ch/ouifm-high.mp3", name: "Oui FM", genre: "Rock", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.ouifm.fr/ouifm-rockindie.mp3", name: "Oui FM - Rock Indie", genre: "Indie", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.ouifm.fr/ouifm-alternatif.mp3", name: "Oui FM - Alternatif", genre: "Rock", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3", name: "Radio Classique", genre: "Classical", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.nostalgie.fr/mp3/nostalgie_high.mp3", name: "Nostalgie", genre: "Oldies", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://stream.nostalgie.fr/mp3/nostalgie_80.mp3", name: "Nostalgie 80", genre: "80s", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.nostalgie.fr/mp3/nostalgie_chansons_francaises.mp3", name: "Nostalgie Chansons Françaises", genre: "Variété", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://radio-bonheur.ice.infomaniak.ch/radio-bonheur-128.mp3", name: "Radio Bonheur", genre: "Variété", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://icecast.radiofrance.fr/fip-midfi.mp3", name: "FIP", genre: "Eclectic", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://icecast.radiofrance.fr/fip-rock-midfi.mp3", name: "FIP Rock", genre: "Rock", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://icecast.radiofrance.fr/fip-electro-midfi.mp3", name: "FIP Électro", genre: "Electro", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://skyrock.ice.infomaniak.ch/skyrock.mp3", name: "Skyrock", genre: "Rap", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://stream.generation.fr/generation.mp3", name: "Générations", genre: "Rap/Hip-Hop", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://radio-fg.ice.infomaniak.ch/radio-fg-high.mp3", name: "Radio FG", genre: "Electro", country: "FR", bitrate: 128, fav: 1, status: "pending" },
-        { url: "https://fg-chic.ice.infomaniak.ch/fg-chic-high.mp3", name: "Chic Radio (par FG)", genre: "Lounge", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://maxifm.ice.infomaniak.ch/maxifm-128.mp3", name: "Maxi FM", genre: "Electro", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.letsmemorize.com/tsf-jazz.mp3", name: "TSF Jazz", genre: "Jazz", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3", name: "Jazz Radio", genre: "Jazz", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://jazzradio-blues.ice.infomaniak.ch/jazzradio-blues.mp3", name: "Jazz Radio - Blues", genre: "Blues", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://jazzradio-lounge.ice.infomaniak.ch/jazzradio-lounge.mp3", name: "Jazz Radio - Lounge", genre: "Lounge", country: "FR", bitrate: 128, fav: 0, status: "pending" },
-        { url: "https://stream.rireetchansons.fr/mp3/rireetchansons_high.mp3", name: "Rire & Chansons", genre: "Comedy", country: "FR", bitrate: 128, fav: 0, status: "pending" }
+        { url: "https://stream.rtl.fr/rtl-1-44-128.mp3", name: "RTL", genre: "Talk", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://icecast.radiofrance.fr/franceinter-midfi.mp3", name: "France Inter", genre: "Talk", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://icecast.radiofrance.fr/franceinfo-midfi.mp3", name: "France Info", genre: "News", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://icecast.radiofrance.fr/francebleu-midfi.mp3", name: "France Bleu", genre: "Local", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.europe1.fr/live/europe1-midfi.mp3", name: "Europe 1", genre: "Talk", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.sudradio.fr/sudradio.mp3", name: "Sud Radio", genre: "Talk", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.rmc.fr/rmc-high", name: "RMC", genre: "Talk", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.NRJ.fr/mp3/nrj_high.mp3", name: "NRJ", genre: "Pop", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://stream.funradio.fr/fun-1-44-128.mp3", name: "Fun Radio", genre: "Dance", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://stream.virginradio.fr/virgin.mp3", name: "Europe 2", genre: "Pop-Rock", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://rfm-live-mp3.scdn.arkena.com/rfm.mp3", name: "RFM", genre: "Pop", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.cheriefm.fr/mp3/cheriefm_high.mp3", name: "Chérie FM", genre: "Pop", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://vinyldance.ice.infomaniak.ch/vinyldance-128.mp3", name: "Mona FM", genre: "Pop", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.rtl2.fr/rtl2-1-44-128.mp3", name: "RTL2", genre: "Rock", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://streaming.radio.rtl.fr/rtl2", name: "RTL2 Alternative", genre: "Rock", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://ouifm.ice.infomaniak.ch/ouifm-high.mp3", name: "Oui FM", genre: "Rock", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.ouifm.fr/ouifm-rockindie.mp3", name: "Oui FM - Rock Indie", genre: "Indie", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.ouifm.fr/ouifm-alternatif.mp3", name: "Oui FM - Alternatif", genre: "Rock", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://radioclassique.ice.infomaniak.ch/radioclassique-high.mp3", name: "Radio Classique", genre: "Classical", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.nostalgie.fr/mp3/nostalgie_high.mp3", name: "Nostalgie", genre: "Oldies", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://stream.nostalgie.fr/mp3/nostalgie_80.mp3", name: "Nostalgie 80", genre: "80s", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.nostalgie.fr/mp3/nostalgie_chansons_francaises.mp3", name: "Nostalgie Chansons Françaises", genre: "Variété", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://radio-bonheur.ice.infomaniak.ch/radio-bonheur-128.mp3", name: "Radio Bonheur", genre: "Variété", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://icecast.radiofrance.fr/fip-midfi.mp3", name: "FIP", genre: "Eclectic", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://icecast.radiofrance.fr/fip-rock-midfi.mp3", name: "FIP Rock", genre: "Rock", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://icecast.radiofrance.fr/fip-electro-midfi.mp3", name: "FIP Électro", genre: "Electro", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://skyrock.ice.infomaniak.ch/skyrock.mp3", name: "Skyrock", genre: "Rap", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://stream.generation.fr/generation.mp3", name: "Générations", genre: "Rap/Hip-Hop", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://radio-fg.ice.infomaniak.ch/radio-fg-high.mp3", name: "Radio FG", genre: "Electro", country: "FR", bitrate: 128, fav: 1 },
+        { url: "https://fg-chic.ice.infomaniak.ch/fg-chic-high.mp3", name: "Chic Radio (par FG)", genre: "Lounge", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://maxifm.ice.infomaniak.ch/maxifm-128.mp3", name: "Maxi FM", genre: "Electro", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.letsmemorize.com/tsf-jazz.mp3", name: "TSF Jazz", genre: "Jazz", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3", name: "Jazz Radio", genre: "Jazz", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://jazzradio-blues.ice.infomaniak.ch/jazzradio-blues.mp3", name: "Jazz Radio - Blues", genre: "Blues", country: "FR", bitrate: 128, fav: 0 },
+        { url: "https://jazzradio-lounge.ice.infomaniak.ch/jazzradio-lounge.mp3", name: "Jazz Radio - Lounge", genre: "FR", bitrate: 128, fav: 0 },
+        { url: "https://stream.rireetchansons.fr/mp3/rireetchansons_high.mp3", name: "Rire & Chansons", genre: "Comedy", country: "FR", bitrate: 128, fav: 0 }
     ];
 
     let selectedStations = [
-        { ...catalog[0] },
-        { ...catalog[12] },
-        { ...catalog[19] },
-        { ...catalog[20] },
-        { ...catalog[25] },
-        { ...catalog[38] }
+        { ...catalog[0] },  // Radio Hardbass
+        { ...catalog[12] }, // RTL
+        { ...catalog[19] }, // NRJ
+        { ...catalog[20] }, // Fun Radio
+        { ...catalog[25] }, // RTL2
+        { ...catalog[38] }  // Skyrock
     ];
 
     let currentlyPlayingUrl = null;
@@ -404,44 +382,6 @@
 
     function isSelected(url) {
         return selectedStations.some(s => s.url === url);
-    }
-
-    // --- FONCTION DE TEST AUTOMATIQUE DES FLUX ---
-    async function runAutoTest() {
-        for (let st of catalog) {
-            st.status = "checking";
-        }
-        renderAll();
-
-        // On teste chaque flux en parallèle (avec un timeout pour éviter de bloquer)
-        const promises = catalog.map(async (st) => {
-            try {
-                // Utilisation d'un proxy CORS public léger (type allorigins ou fetch no-cors)
-                // Pour les flux audio, on tente une requête HEAD ou un chargement partiel
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 sec max par test
-
-                const response = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(st.url)}`, {
-                    method: 'GET',
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-
-                st.status = response.ok ? "ok" : "error";
-            } catch (err) {
-                st.status = "error"; // Si bloqué par CORS ou timeout, on met en erreur (mais le flux reste parfaitement jouable en jeu)
-            }
-            renderAll();
-        });
-
-        await Promise.all(promises);
-    }
-
-    function getStatusBadge(status) {
-        if (status === "checking") return `<span class="status-dot checking" title="Test en cours...">⏳ Test...</span>`;
-        if (status === "ok") return `<span class="status-dot ok" title="Flux opérationnel">🟢 OK</span>`;
-        if (status === "error") return `<span class="status-dot error" title="Flux injoignable ou protégé (Fonctionne souvent en jeu)">🔴 Hors-ligne?</span>`;
-        return `<span class="status-dot checking">⚪ En attente</span>`;
     }
 
     function renderAvailable() {
@@ -472,7 +412,6 @@
                             <span class="badge">${escapeHtml(st.country)}</span>
                             <span class="badge">${escapeHtml(st.genre)}</span>
                             <span>${st.bitrate}k</span>
-                            ${getStatusBadge(st.status)}
                         </div>
                     </div>
                 </div>
@@ -521,7 +460,6 @@
                         <div class="station-meta">
                             <span class="badge">${escapeHtml(st.country)}</span>
                             <span class="badge">${escapeHtml(st.genre)}</span>
-                            ${getStatusBadge(st.status)}
                         </div>
                     </div>
                 </div>
@@ -660,8 +598,7 @@
                         genre: parts[2] || 'Other',
                         country: parts[3] || 'XX',
                         bitrate: parseInt(parts[4]) || 128,
-                        fav: parseInt(parts[5]) || 0,
-                        status: "pending"
+                        fav: parseInt(parts[5]) || 0
                     });
                 }
             }
@@ -715,8 +652,6 @@
     }
 
     renderAll();
-    // Lancement automatique du test des flux dès l'ouverture de la page
-    runAutoTest();
 </script>
 </body>
 </html>
