@@ -43,8 +43,8 @@
     { "url": "https://fg-chic.ice.infomaniak.ch/fg-chic-high.mp3", "name": "Chic Radio (par FG)", "genre": "Lounge", "country": "FR", "bitrate": 128, "fav": 0 },
     { "url": "https://maxifm.ice.infomaniak.ch/maxifm-128.mp3", "name": "Maxi FM", "genre": "Electro", "country": "FR", "bitrate": 128, "fav": 0 },
     { "url": "https://stream.letsmemorize.com/tsf-jazz.mp3", "name": "TSF Jazz", "genre": "Jazz", "country": "FR", "bitrate": 128, "fav": 0 },
-    { "url": "https://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3", "name": "Jazz Radio", "genre": "Jazz", "country": "FR", "bitrate": 128, "fav": 0 },
-    { "url": "https://jazzradio-blues.ice.infomaniak.ch/jazzradio-blues.mp3", "name": "Jazz Radio - Blues", genre: "Blues", "country": "FR", "bitrate": 128, "fav": 0 },
-    { "url": "https://jazzradio-lounge.ice.infomaniak.ch/jazzradio-lounge.mp3", "name": "Jazz Radio - Lounge", genre: "Lounge", country: "FR", "bitrate": 128, "fav": 0 },
-    { "url": "https://stream.rireetchansons.fr/mp3/rireetchansons_high.mp3", "name": "Rire & Chansons", genre: "Comedy", country: "FR", "bitrate": 128, "fav": 0 }
+    { "url": "https://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3", "name": "Jazz Radio", "genre": "Jazz", "country": "FR", "bitrate": 128, "fav": 0 }, 
+    { "url": "https://jazzradio-blues.ice.infomaniak.ch/jazzradio-blues.mp3", "name": "Jazz Radio - Blues", "genre": "Blues", "country": "FR", "bitrate": 128, "fav": 0 },
+    { "url": "https://jazzradio-lounge.ice.infomaniak.ch/jazzradio-lounge.mp3", "name": "Jazz Radio - Lounge", "genre": "Lounge", "country": "FR", "bitrate": 128, "fav": 0 },
+    { "url": "https://stream.rireetchansons.fr/mp3/rireetchansons_high.mp3", "name": "Rire & Chansons", "genre": "Comedy", "country": "FR", "bitrate": 128, "fav": 0 }
 ]
