@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETS 2 - Générateur live_streams.sii</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --card-hover: #282828;
+            --accent: #ff6600;
+            --accent-hover: #e05a00;
+            --text: #f0f0f0;
+            --muted: #999;
+            --border: #333;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            max-width: 1300px;
+            margin: 20px auto;
+            padding: 0 20px 40px;
+        }
+        h1 { color: var(--accent); margin-bottom: 5px; }
+        .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 0.95rem; }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: var(--card);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        input[type="text"] {
+            padding: 9px 12px;
+            border-radius: 5px;
+            border: 1px solid var(--border);
+            background: #2a2a2a;
+            color: var(--text);
+            font-size: 0.95rem;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        @media (max-width: 950px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .panel-header h2 {
+            margin: 0;
+            font-size: 1.15rem;
+        }
+        .count-badge {
+            background: #2a2a2a;
+            color: var(--accent);
+            border: 1px solid var(--border);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .station-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 580px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .station-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #252525;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .station-item:hover { background: var(--card-hover); }
+        .station-item.selected-card {
+            cursor: grab;
+        }
+        .station-item.selected-card:active {
+            cursor: grabbing;
+        }
+        .station-item.dragging {
+            opacity: 0.45;
+            border: 1px dashed var(--accent);
+        }
+        .station-item.drag-over {
+            border-top: 2px solid var(--accent);
+        }
+
+        .station-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden;
+            flex: 1;
+        }
+        .station-left input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .drag-handle {
+            color: #666;
+            font-size: 1.1rem;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .order-num {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 0.85rem;
+            min-width: 24px;
+            flex-shrink: 0;
+        }
+        .station-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .station-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .station-meta {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        .badge {
+            background: #2d2d2d;
+            padding: 1px 5px;
+            border-radius: 3px;
+            margin-right: 4px;
+            border: 1px solid #3d3d3d;
+        }
+
+        .station-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .fav-btn {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #555;
+            padding: 2px 4px;
+            transition: 0.15s;
+        }
+        .fav-btn.active { color: #ffcc00; }
+
+        .icon-btn {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+        .icon-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .icon-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .play-btn {
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+        }
+        .remove-btn:hover {
+            border-color: #ff4444 !important;
+            color: #ff4444 !important;
+        }
+
+        .btn {
+            background: #333;
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.15s;
+        }
+        .btn:hover { background: #444; }
+
+        .right-footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+        #player-status {
+            color: var(--accent);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 65%;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            font-weight: bold;
+            padding: 13px 20px;
+            font-size: 1rem;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Générateur <code>live_streams.sii</code> (ETS 2)</h1>
+    <p class="subtitle">Coche tes radios à gauche, organise leur ordre à droite (glisser-déposer ou flèches) et télécharge ton fichier.</p>
+
+    <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Rechercher une radio, un genre, un pays..." oninput="renderAvailable()">
+        <button class="btn" onclick="selectAll()">Tout sélectionner</button>
+        <button class="btn" onclick="clearSelection()">Tout vider</button>
+        <label class="btn" style="cursor:pointer;">
+            Importer un .sii
+            <input type="file" id="importFile" accept=".sii,.txt" style="display:none" onchange="importSiiFile(event)">
+        </label>
+    </div>
+
+    <div class="main-layout">
+        <!-- Colonne de gauche : Catalogue chargé depuis radios.json -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Radios disponibles</h2>
+                <span class="count-badge" id="availableCount">0</span>
+            </div>
+            <div id="availableList" class="station-list"></div>
+        </div>
+
+        <!-- Colonne de droite : Liste triable et validation -->
+        <div class="panel">
+            <div class="panel-header">
+                <h2>Ma sélection (ordre en jeu)</h2>
+                <span class="count-badge" id="selectedCount">0</span>
+            </div>
+
+            <div id="selectedList" class="station-list"></div>
+
+            <div class="right-footer">
+                <div class="status-row">
+                    <span id="player-status">Chargement des radios...</span>
+                    <span>Glisse les cartes pour trier</span>
+                </div>
+                <button class="btn-primary" onclick="downloadSii()">Générer et télécharger live_streams.sii</button>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+
+<script>
+    let catalog = [];
+    let selectedStations = [];
+
+    let currentlyPlayingUrl = null;
+    let dragStartIndex = null;
+    const audio = document.getElementById('audioPlayer');
+
+    // Chargement dynamique du fichier JSON externe
+    async function loadRadios() {
+        try {
+            const response = await fetch('radios.json');
+            if (!response.ok) throw new Error("Fichier introuvable");
+            catalog = await response.json();
+            
+            // Par défaut, on sélectionne les 4 premières pour l'exemple au démarrage
+            if (catalog.length > 0) {
+                selectedStations = catalog.slice(0, Math.min(4, catalog.length)).map(s => ({ ...s }));
+            }
+            
+            renderAll();
+            document.getElementById('player-status').textContent = 'Lecteur audio inactif';
+        } catch (error) {
+            console.error("Erreur:", error);
+            document.getElementById('player-status').textContent = 'Erreur de chargement de radios.json';
+            alert("Impossible de charger le fichier radios.json. Vérifie qu'il est bien présent à la racine.");
+        }
+    }
+
+    function isSelected(url) {
+        return selectedStations.some(s => s.url === url);
+    }
+
+    function renderAvailable() {
+        const list = document.getElementById('availableList');
+        const query = document.getElementById('searchInput').value.toLowerCase();
+        list.innerHTML = '';
+
+        let visibleCount = 0;
+
+        catalog.forEach((st, idx) => {
+            const match = st.name.toLowerCase().includes(query) ||
+                          st.genre.toLowerCase().includes(query) ||
+                          st.country.toLowerCase().includes(query);
+            if (!match) return;
+            visibleCount++;
+
+            const checked = isSelected(st.url);
+            const isPlaying = currentlyPlayingUrl === st.url && !audio.paused;
+
+            const item = document.createElement('div');
+            item.className = 'station-item';
+            item.innerHTML = `
+                <div class="station-left">
+                    <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleStation(${idx}, this.checked)">
+                    <div class="station-info">
+                        <span class="station-name" title="${escapeHtml(st.name)}">${escapeHtml(st.name)}</span>
+                        <div class="station-meta">
+                            <span class="badge">${escapeHtml(st.country)}</span>
+                            <span class="badge">${escapeHtml(st.genre)}</span>
+                            <span>${st.bitrate || 128}k</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="station-actions">
+                    <button class="icon-btn play-btn" title="Écouter un aperçu" onclick="togglePlay('${escapeAttr(st.url)}', '${escapeAttr(st.name)}')">${isPlaying ? '⏹' : '▶'}</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+
+        document.getElementById('availableCount').textContent = visibleCount;
+    }
+
+    function renderSelected() {
+        const list = document.getElementById('selectedList');
+        list.innerHTML = '';
+
+        document.getElementById('selectedCount').textContent = selectedStations.length;
+
+        if (selectedStations.length === 0) {
+            list.innerHTML = `<div class="empty-state">Aucune radio sélectionnée.<br>Coche des stations dans la colonne de gauche pour les ajouter ici.</div>`;
+            return;
+        }
+
+        selectedStations.forEach((st, idx) => {
+            const isPlaying = currentlyPlayingUrl === st.url && !audio.paused;
+
+            const item = document.createElement('div');
+            item.className = 'station-item selected-card';
+            item.draggable = true;
+            item.dataset.index = idx;
+
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragover', handleDragOver);
+            item.addEventListener('dragleave', handleDragLeave);
+            item.addEventListener('drop', handleDrop);
+            item.addEventListener('dragend', handleDragEnd);
+
+            item.innerHTML = `
+                <div class="station-left">
+                    <span class="drag-handle" title="Glisser pour réorganiser">⋮⋮</span>
+                    <span class="order-num">#${idx + 1}</span>
+                    <div class="station-info">
+                        <span class="station-name" title="${escapeHtml(st.name)}">${escapeHtml(st.name)}</span>
+                        <div class="station-meta">
+                            <span class="badge">${escapeHtml(st.country)}</span>
+                            <span class="badge">${escapeHtml(st.genre)}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="station-actions">
+                    <button class="icon-btn play-btn" title="Écouter" onclick="togglePlay('${escapeAttr(st.url)}', '${escapeAttr(st.name)}')">${isPlaying ? '⏹' : '▶'}</button>
+                    <button class="fav-btn ${st.fav ? 'active' : ''}" title="Favori en jeu" onclick="toggleSelectedFav(${idx})">★</button>
+                    <button class="icon-btn" title="Monter" onclick="moveStation(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+                    <button class="icon-btn" title="Descendre" onclick="moveStation(${idx}, 1)" ${idx === selectedStations.length - 1 ? 'disabled' : ''}>▼</button>
+                    <button class="icon-btn remove-btn" title="Retirer" onclick="removeSelected(${idx})">✕</button>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function toggleStation(catalogIdx, isChecked) {
+        const st = catalog[catalogIdx];
+        if (isChecked) {
+            if (!isSelected(st.url)) {
+                selectedStations.push({ ...st });
+            }
+        } else {
+            selectedStations = selectedStations.filter(s => s.url !== st.url);
+        }
+        renderSelected();
+    }
+
+    function removeSelected(idx) {
+        selectedStations.splice(idx, 1);
+        renderAll();
+    }
+
+    function toggleSelectedFav(idx) {
+        selectedStations[idx].fav = selectedStations[idx].fav ? 0 : 1;
+        renderSelected();
+    }
+
+    function moveStation(idx, direction) {
+        const newIdx = idx + direction;
+        if (newIdx < 0 || newIdx >= selectedStations.length) return;
+        const [moved] = selectedStations.splice(idx, 1);
+        selectedStations.splice(newIdx, 0, moved);
+        renderSelected();
+    }
+
+    function handleDragStart(e) {
+        dragStartIndex = Number(this.dataset.index);
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        this.classList.add('drag-over');
+    }
+
+    function handleDragLeave() {
+        this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        const dropIndex = Number(this.dataset.index);
+        if (dragStartIndex === null || dragStartIndex === dropIndex) return;
+
+        const [movedItem] = selectedStations.splice(dragStartIndex, 1);
+        selectedStations.splice(dropIndex, 0, movedItem);
+        renderSelected();
+    }
+
+    function handleDragEnd() {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.selected-card').forEach(el => el.classList.remove('drag-over'));
+        dragStartIndex = null;
+    }
+
+    function selectAll() {
+        catalog.forEach(st => {
+            if (!isSelected(st.url)) {
+                selectedStations.push({ ...st });
+            }
+        });
+        renderAll();
+    }
+
+    function clearSelection() {
+        selectedStations = [];
+        renderAll();
+    }
+
+    function togglePlay(url, name) {
+        const statusEl = document.getElementById('player-status');
+
+        if (currentlyPlayingUrl === url && !audio.paused) {
+            audio.pause();
+            currentlyPlayingUrl = null;
+            statusEl.textContent = 'Lecteur audio inactif';
+            renderAll();
+            return;
+        }
+
+        audio.src = url;
+        currentlyPlayingUrl = url;
+        statusEl.textContent = `Chargement : ${name}...`;
+        renderAll();
+
+        audio.play().then(() => {
+            statusEl.textContent = `En écoute : ${name}`;
+        }).catch(() => {
+            statusEl.textContent = `Flux bloqué par le navigateur (souvent OK en jeu)`;
+            currentlyPlayingUrl = null;
+            renderAll();
+        });
+    }
+
+    function importSiiFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const text = e.target.result;
+            const regex = /stream_data\[\d+\]:\s*"([^"]+)"/g;
+            let match;
+            const imported = [];
+
+            while ((match = regex.exec(text)) !== null) {
+                const parts = match[1].split('|');
+                if (parts.length >= 2) {
+                    imported.push({
+                        url: parts[0] || '',
+                        name: parts[1] || 'Radio sans nom',
+                        genre: parts[2] || 'Other',
+                        country: parts[3] || 'XX',
+                        bitrate: parseInt(parts[4]) || 128,
+                        fav: parseInt(parts[5]) || 0
+                    });
+                }
+            }
+
+            if (imported.length > 0) {
+                selectedStations = imported;
+                renderAll();
+                alert(`${imported.length} radios importées dans ta sélection !`);
+            } else {
+                alert("Aucune entrée stream_data valide trouvée.");
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    function downloadSii() {
+        if (selectedStations.length === 0) {
+            alert("Sélectionne au moins une radio avant de générer le fichier !");
+            return;
+        }
+
+        let output = "SiiNunit\n{\nlive_stream_def : _nameless.2b3.c071.b3c8 {\n";
+        output += ` stream_data: ${selectedStations.length}\n`;
+
+        selectedStations.forEach((s, index) => {
+            const line = `${s.url}|${s.name}|${s.genre}|${s.country}|${s.bitrate || 128}|${s.fav || 0}`;
+            output += ` stream_data[${index}]: "${line}"\n`;
+        });
+
+        output += "\n}\n\n}\n";
+
+        const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'live_streams.sii';
+        link.click();
+    }
+
+    function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    }
+
+    function escapeAttr(str) {
+        return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function renderAll() {
+        renderAvailable();
+        renderSelected();
+    }
+
+    // Lancement au démarrage
+    loadRadios();
+</script>
+</body>
+</html>
