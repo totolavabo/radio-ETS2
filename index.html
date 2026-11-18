@@ -92,7 +92,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
-            max-height: 580px;
+            max-height: 520px;
             overflow-y: auto;
             padding-right: 5px;
         }
@@ -243,20 +243,37 @@
             flex-direction: column;
             gap: 12px;
         }
-        .status-row {
+        
+        .player-bar {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            font-size: 0.85rem;
-            color: var(--muted);
+            gap: 10px;
+            background: #252525;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
         }
         #player-status {
             color: var(--accent);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 65%;
+            flex: 1;
+            font-size: 0.85rem;
         }
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+        input[type="range"] {
+            width: 80px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
         .btn-primary {
             background: var(--accent);
             color: #fff;
@@ -316,10 +333,17 @@
             <div id="selectedList" class="station-list"></div>
 
             <div class="right-footer">
-                <div class="status-row">
+                <!-- Barre de contrôle audio (Play/Pause + Volume) -->
+                <div class="player-bar">
+                    <button class="icon-btn play-btn" id="globalPlayBtn" title="Lecture / Pause" onclick="toggleGlobalPlay()">▶</button>
                     <span id="player-status">Lecteur audio inactif</span>
-                    <span>Glisse les cartes pour trier</span>
+                    <div class="volume-container">
+                        <span>🔊</span>
+                        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.1" oninput="changeVolume(this.value)">
+                        <span id="volumeLabel">10%</span>
+                    </div>
                 </div>
+
                 <button class="btn-primary" onclick="downloadSii()">Générer et télécharger live_streams.sii</button>
             </div>
         </div>
@@ -340,18 +364,54 @@
         { url: "http://direct.mouv.fr/live/mouv-midfi.mp3", name: "Mouv'", genre: "Rap", country: "FR", bitrate: 128, fav: 0 }
     ];
 
-    let selectedStations = [
-        { ...catalog[0] },  // Radio Hardbass
-        { ...catalog[12] }, // RTL
-        { ...catalog[19] }, // NRJ
-        { ...catalog[20] }, // Fun Radio
-        { ...catalog[25] }, // RTL2
-        { ...catalog[38] }  // Skyrock
+let selectedStations = [
+        { ...catalog[0] },  // RTL
+        { ...catalog[7] },  // NRJ
+        { ...catalog[8] },  // Fun Radio
+        { ...catalog[13] }, // RTL2
+        { ...catalog[19] }, // Nostalgie
+        { ...catalog[26] }  // Skyrock
     ];
 
     let currentlyPlayingUrl = null;
     let dragStartIndex = null;
     const audio = document.getElementById('audioPlayer');
+
+    // Initialisation du volume par défaut à 10%
+    audio.volume = 0.1;
+
+    function changeVolume(val) {
+        audio.volume = val;
+        document.getElementById('volumeLabel').textContent = Math.round(val * 100) + '%';
+    }
+
+    function toggleGlobalPlay() {
+        const statusEl = document.getElementById('player-status');
+        const playBtn = document.getElementById('globalPlayBtn');
+
+        if (!currentlyPlayingUrl) {
+            // Si rien n'est en cours, lance la première station disponible
+            if (selectedStations.length > 0) {
+                togglePlay(selectedStations[0].url, selectedStations[0].name);
+            } else if (catalog.length > 0) {
+                togglePlay(catalog[0].url, catalog[0].name);
+            }
+            return;
+        }
+
+        if (audio.paused) {
+            audio.play().then(() => {
+                playBtn.textContent = '⏹';
+            }).catch(() => {
+                statusEl.textContent = 'Erreur de lecture';
+            });
+        } else {
+            audio.pause();
+            playBtn.textContent = '▶';
+            statusEl.textContent = 'Lecteur en pause';
+        }
+        renderAll();
+    }
 
     function isSelected(url) {
         return selectedStations.some(s => s.url === url);
@@ -528,11 +588,13 @@
 
     function togglePlay(url, name) {
         const statusEl = document.getElementById('player-status');
+        const globalPlayBtn = document.getElementById('globalPlayBtn');
 
         if (currentlyPlayingUrl === url && !audio.paused) {
             audio.pause();
             currentlyPlayingUrl = null;
             statusEl.textContent = 'Lecteur audio inactif';
+            globalPlayBtn.textContent = '▶';
             renderAll();
             return;
         }
@@ -544,9 +606,11 @@
 
         audio.play().then(() => {
             statusEl.textContent = `En écoute : ${name}`;
+            globalPlayBtn.textContent = '⏹';
         }).catch(() => {
-            statusEl.textContent = `Bloqué par navigateur (Tester avec le bouton 🌐)`;
+            statusEl.textContent = `Bloqué par navigateur (Tester avec 🌐)`;
             currentlyPlayingUrl = null;
+            globalPlayBtn.textContent = '▶';
             renderAll();
         });
     }
@@ -604,7 +668,7 @@
 
         output += "\n}\n\n}\n";
 
-        const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob([output], { type: 'text/plain;charset=utf-8' }));
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         link.download = 'live_streams.sii';
